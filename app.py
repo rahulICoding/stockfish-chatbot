@@ -7,6 +7,14 @@ from langchain_chroma import Chroma
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 
+from ingest import build_kb
+if not os.path.exists("./stockfish_db"):
+    st.info("First time setup: Indexing Stockfish documents...")
+    try:
+        build_kb()
+        st.success("Indexing complete!")
+    except Exception as e:
+        st.error(f"Failed to build knowledge base: {e}")
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(page_title="Stockfish Agent")
