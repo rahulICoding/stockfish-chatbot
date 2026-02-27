@@ -1,0 +1,451 @@
+﻿Skip to content
+Stockfish Docs
+Search
+⌘K
+Main Navigation
+Home
+Docs
+Main Site
+Fishtest
+On this page
+* Standard commands
+   * quit
+   * uci
+   * setoption
+      * Threads
+      * Hash
+      * MultiPV
+      * NumaPolicy
+      * Clear Hash
+      * Ponder
+      * EvalFile
+      * EvalFileSmall
+      * UCI_Chess960
+      * UCI_ShowWDL
+      * UCI_LimitStrength
+      * UCI_Elo
+      * Skill Level
+      * SyzygyPath
+      * SyzygyProbeDepth
+      * Syzygy50MoveRule
+      * SyzygyProbeLimit
+      * Move Overhead
+      * nodestime
+      * Debug Log File
+   * position
+   * ucinewgame
+   * isready
+   * go
+      * searchmoves <move1> .... <movei>
+      * ponder
+      * wtime <x>
+      * btime <x>
+      * winc <x>
+      * binc <x>
+      * movestogo <x>
+      * depth <x>
+      * nodes <x>
+      * mate <x>
+      * movetime <x>
+      * infinite
+      * perft <x>
+   * stop
+   * ponderhit
+* Non-standard commands
+   * bench
+   * speedtest
+   * d
+   * eval
+   * compiler
+   * export_net [filenameBigNet] [filenameSmallNet]
+   * flip
+   * help
+   * license
+UCI & Commands
+The Universal Chess Interface (UCI) is a standard text-based protocol used to communicate with a chess engine and is the recommended way to do so for typical graphical user interfaces (GUI) or chess tools. Stockfish implements the majority of its options.
+Developers can see the default values for the UCI options available in Stockfish by typing ./stockfish uci in a terminal, but most users should typically use a chess GUI to interact with Stockfish.
+* Standard commands
+   * quit
+   * uci
+   * setoption
+   * position
+   * ucinewgame
+   * isready
+   * go
+   * stop
+   * ponderhit
+* Non-standard commands
+   * bench
+   * speedtest
+   * d
+   * eval
+   * compiler
+   * export_net [filenameBigNet] [filenameSmallNet]
+   * flip
+   * help
+   * license
+Standard commands
+quit
+Quit the program as soon as possible.
+uci
+Tell the engine to use the UCI (universal chess interface).
+This will be sent once, by a GUI, as a first command after the program boots to tell the engine to switch to UCI mode.
+After receiving the uci command the engine will identify itself with the id command and send the option commands to tell the GUI which engine settings the engine supports.
+After that, the engine will send uciok to acknowledge the UCI mode.
+If no uciok is sent within a certain time period, the engine task will be killed by the GUI.
+ExampleNote that a different Stockfish version than the one used below may have a different output, with different values and other available options. Please run this command yourself to know what values are available in your specific version.
+> uci
+id name Stockfish 16.1
+id author the Stockfish developers (see AUTHORS file)
+
+
+option name Debug Log File type string default
+option name Threads type spin default 1 min 1 max 1024
+option name Hash type spin default 16 min 1 max 33554432
+option name Clear Hash type button
+option name Ponder type check default false
+option name MultiPV type spin default 1 min 1 max 256
+option name Skill Level type spin default 20 min 0 max 20
+option name Move Overhead type spin default 10 min 0 max 5000
+option name nodestime type spin default 0 min 0 max 10000
+option name UCI_Chess960 type check default false
+option name UCI_LimitStrength type check default false
+option name UCI_Elo type spin default 1320 min 1320 max 3190
+option name UCI_ShowWDL type check default false
+option name SyzygyPath type string default <empty>
+option name SyzygyProbeDepth type spin default 1 min 1 max 100
+option name Syzygy50MoveRule type check default true
+option name SyzygyProbeLimit type spin default 7 min 0 max 7
+option name EvalFile type string default nn-b1a57edbea57.nnue
+option name EvalFileSmall type string default nn-baff1ede1f90.nnue
+uciok
+setoption
+Usage: setoption name <id> [value <x>]
+This is sent to the engine when the user wants to change the internal parameters of the engine. For the button type no value is needed.
+One string will be sent for each parameter and this will only be sent when the engine is waiting.
+Examples:
+> setoption name Threads value 6
+> setoption name SyzygyPath value C:\Chess\tb\tb345;C:\Chess\tb\wdl6;C:\Chess\tb\wdl7
+> setoption name UCI_ShowWDL value true
+> setoption name Clear Hash
+List of options:
+* Threads
+type spin default 1 min 1 max 1024
+The number of CPU threads used for searching a position. For best performance, set this equal to the number of CPU cores available.
+* Hash
+type spin default 16 min 1 max 33554432
+The size of the hash table in MB. It is recommended to set Hash after setting Threads.
+* MultiPV
+type spin default 1 min 1 max 500
+Output the N best lines (principal variations, PVs) when searching. Leave at 1 for the best performance.
+* NumaPolicy
+type string default auto
+Binds threads to a specific NUMA node to enhance performance on multi-CPU or multi-NUMA domain systems. Options:
+   * none - assumes a single NUMA node, no thread binding
+   * system - uses NUMA information available from the system and binds the threads accordingly
+   * auto - default; automatically selects system or none based on the system
+   * hardware - uses NUMA information from the underlying hardware and binds the threads accordingly, overrides any previous affinities.
+Should be used if Stockfish doesn't utilize all threads, e.g. Windows 10 or certain GUI's like ChessBase.
+   * [[custom]] - precisely specify the available CPUs per numa domain. ':' separates numa nodes; ',' separates cpu indices; supports "first-last" range syntax for cpu indices, for example 0-15,32-47:16-31,48-63
+      * Clear Hash
+type button
+Clear the hash table.
+      * Ponder
+type check default false
+Let Stockfish ponder its next move while the opponent is thinking.
+      * EvalFile
+type string default nn-[SHA256 first 12 digits].nnue
+The name of the file of the NNUE evaluation parameters. Depending on the GUI the filename might have to include the full path to the folder/directory that contains the file. Other locations, such as the directory that contains the binary and the working directory, are also searched.
+      * EvalFileSmall
+type string default nn-[SHA256 first 12 digits].nnue
+Same as EvalFile.
+      * UCI_Chess960
+type check default false
+An option handled by your GUI. If true, Stockfish will play Chess960.
+      * UCI_ShowWDL
+type check default false
+If enabled, show approximate WDL statistics as part of the engine output. These WDL numbers model expected game outcomes for a given evaluation and game ply for engine self-play at fishtest LTC conditions (60+0.6s per game).
+      * UCI_LimitStrength
+type check default false
+Enable weaker play aiming for an Elo rating as set by UCI_Elo. This option overrides Skill Level.
+      * UCI_Elo
+type spin default 1320 min 1320 max 3190
+If UCI_LimitStrength is enabled, it aims for an engine strength of the given Elo.
+This Elo rating has been calibrated at a time control of 120s+1s and anchored to CCRL 40/4.
+It takes precedence over Skill Level if both are set.
+See also: How do Skill Level and UCI_Elo work
+      * Skill Level
+type spin default 20 min 0 max 20
+Lower the Skill Level in order to make Stockfish play weaker (see also UCI_LimitStrength).
+Internally, MultiPV is enabled, and with a certain probability depending on the Skill Level, a weaker move will be played.
+See also: How do Skill Level and UCI_Elo work
+      * SyzygyPath
+type string default <empty>
+Path to the folders/directories storing the Syzygy tablebase files. Multiple directories are to be separated by ; on Windows and by : on Unix-based operating systems. Do not use spaces around the ; or :.
+Example: C:\tablebases\wdl345;C:\tablebases\wdl6;D:\tablebases\dtz345;D:\tablebases\dtz6
+It is recommended to store .rtbw files on an SSD. There is no loss in storing the .rtbz files on a regular HDD. It is recommended to verify all md5 checksums of the downloaded tablebase files (md5sum -c checksum.md5) as corruption will lead to engine crashes.
+      * SyzygyProbeDepth
+type spin default 1 min 1 max 100
+Minimum remaining search depth for which a position is probed. Set this option to a higher value to probe less aggressively if you experience too much slowdown (in terms of nps) due to tablebase probing.
+      * Syzygy50MoveRule
+type check default true
+Disable to let fifty-move rule draws detected by Syzygy tablebase probes count as wins or losses. This is useful for ICCF correspondence games.
+      * SyzygyProbeLimit
+type spin default 7 min 0 max 7
+Limit Syzygy tablebase probing to positions with at most this many pieces left (including kings and pawns).
+      * Move Overhead
+type spin default 10 min 0 max 5000
+Assume a time delay of x ms due to network and GUI overheads. Specifying a value larger than the default is needed to avoid time losses or near instantaneous moves, in particular for time controls without increment (e.g. sudden death). The default is suitable for engine-engine matches played locally on dedicated hardware, while it needs to be increased on a loaded system, when playing over a network, or when using certain GUIs such as Arena or ChessGUI.
+      * nodestime
+type spin default 0 min 0 max 10000
+Tells the engine to use nodes searched instead of wall time to account for elapsed time. Useful for engine testing. When this option is set, the engine is only limited by the total amount of nodes searched per game; this limit is calculated once per game. The initial time control values in milliseconds (time time and increment per move inc) are used as input values to calculate the total number of nodes per game (totalnodes). The increment per move inc is used as if it was just one move per game. The formula is totalnodes = (time + inc * 1) * nodestime. Suppose you specified nodestime = 600, and the time control per game is 300 seconds plus 3 seconds increment per move ("300+3s"), or 300000 milliseconds plus 3000 milliseconds increment per move. In that case, the maximum total number of nodes searched per game by the engine is totalnodes = (300000 + 3000 * 1) * 600 = 181800000 (one hundred eighty-one million, eight hundred thousand) nodes, regardless of how much wall time it will actually take.
+      * Debug Log File
+type string default
+Write all communication to and from the engine into a text file.
+position
+Usage: position [fen <fenstring> | startpos ] moves <move1> .... <movei>
+Set up the position described in fenstring.
+If the game was played from the start position the string startpos must be sent.
+NOTE
+         * If this position is from a different game than the last position sent to the engine, the GUI should have sent a ucinewgame in between.
+         * Using moves is the recommended way to set up game positions because the move history allows the engine to correctly handle threefold repetition detection.
+Examples:
+> position startpos
+> position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5
+> position fen 8/1B6/8/5p2/8/8/5Qrq/1K1R2bk w - - 0 1
+> position fen 8/3P3k/n2K3p/2p3n1/1b4N1/2p1p1P1/8/3B4 w - - 0 1 moves g4f6 h7g7 f6h5 g7g6 d1c2
+ucinewgame
+This is sent to the engine when the next search (started with position and go) will be from a different game. This can be a new game the engine should play or a new game it should analyze but also the next position from a test suite with positions only.
+If the GUI hasn't sent a ucinewgame before the first position command, the engine won't expect any further ucinewgame commands as the GUI is probably not supporting the ucinewgame command.
+So the engine will not rely on this command even though all new GUIs should support it.
+As the engine's reaction to ucinewgame can take some time the GUI should always send isready after ucinewgame to wait for the engine to finish its operation. The engine will respond with readyok.
+NOTE
+This clears the hash and any information which was collected during the previous search.
+Example
+isready
+This is used to synchronize the engine with the GUI.
+When the GUI has sent a command or multiple commands that can take some time to complete, this command can be used to wait for the engine to be ready again or to ping the engine to find out if it is still alive.
+e.g. this should be sent after setting the path to the tablebases as this can take some time.
+This command is also required once, before the engine is asked to do any searching, to wait for the engine to finish initializing.
+This command will always be answered with readyok and can be sent also when the engine is calculating in which case the engine will also immediately answer with readyok without stopping the search.
+Example:
+> isready
+readyok
+go
+Start calculating on the current position set up with the position command.
+There are a number of parameters that can follow this command and all will be sent in the same string.
+Usually at least one parameter is sent to limit the search but it is not required.
+NOTE
+         * If no parameter is sent, then go depth 245 will be executed.
+         * Mixing and matching different ways of limiting the search time (depth, nodes, movetime, wtime + winc + btime + binc) will result in the search ending when it hits any one of those limits. For example, you can limit the search to a maximum depth and time with go depth x movetime y.
+Example: go infinite
+Example: go depth
+Example: go nodes
+Example: go mate
+Mating
+> position startpos moves g2g4 e7e5 f2f3
+> go mate 1
+info depth 1 seldepth 1 multipv 1 score mate 1 nodes 31 nps 10333 hashfull 0 tbhits 0 time 3 pv d8h4
+bestmove d8h4
+Being mated (since Stockfish 17)
+> position fen rn1q1r2/p4pk1/1p3R1p/2ppP2Q/3P4/2P4P/P1P3P1/1R4K1 w - - 0 1 moves h5h6
+> go mate 2
+info depth 1 seldepth 3 multipv 1 score cp -536 nodes 2 nps 400 hashfull 0 tbhits 0 time 5 pv g7g8
+info depth 2 seldepth 3 multipv 1 score cp -536 nodes 4 nps 800 hashfull 0 tbhits 0 time 5 pv g7g8
+info depth 3 seldepth 3 multipv 1 score cp -536 nodes 6 nps 1200 hashfull 0 tbhits 0 time 5 pv g7g8
+info depth 4 seldepth 3 multipv 1 score cp -536 nodes 8 nps 1600 hashfull 0 tbhits 0 time 5 pv g7g8
+info depth 5 seldepth 5 multipv 1 score cp -551 nodes 14 nps 2333 hashfull 0 tbhits 0 time 6 pv g7g8 h6g5 g8h7
+info depth 6 seldepth 4 multipv 1 score cp -551 nodes 23 nps 3833 hashfull 0 tbhits 0 time 6 pv g7g8 h6g5 g8h7
+info depth 7 seldepth 5 multipv 1 score mate -2 nodes 36 nps 6000 hashfull 0 tbhits 0 time 6 pv g7g8 h6g5 g8h7 f6h6
+bestmove g7g8 ponder h6g5
+Example: MultiPV
+Example: UCI_ShowWDL
+Parameters:
+         * searchmoves <move1> .... <movei>
+Restrict search to these moves only.
+Example: After position startpos and go infinite searchmoves e2e4 d2d4 the engine will only search the two moves e2e4 and d2d4 in the initial position.
+         * ponder
+Start searching in pondering mode. It won't exit the search in ponder mode, even if it's mate!
+This means that the last move sent in in the position string is the ponder move.
+The engine can do what it wants to do, but after a ponderhit command it will execute the suggested move to ponder on.
+This means that the ponder move sent by the GUI can be interpreted as a recommendation about which move to ponder.
+However, if the engine decides to ponder on a different move, it won't display any mainlines as they are likely to be misinterpreted by the GUI because the GUI expects the engine to ponder on the suggested move.
+         * wtime <x>
+Tell the engine that White has x ms left on the clock.
+         * btime <x>
+Tell the engine that Black has x ms left on the clock.
+         * winc <x>
+Tell the engine that White's increment per move in ms if x > 0.
+         * binc <x>
+Tell the engine that Black's increment per move in ms if x > 0.
+         * movestogo <x>
+Tell the engine that there are x moves to the next time control
+Note: this will only be sent if x > 0, if you don't get this and get the wtime and btime it's sudden death.
+         * depth <x>
+Stop the search when depth x has been reached.
+         * nodes <x>
+Stop the search when approximately x number of nodes have been reached.
+         * mate <x>
+Stop the search when/if a mate in x or less moves is found.
+It will stop if the side to move is mating and since Stockfish 17 when getting mated too.
+         * movetime <x>
+Stop the search when approximately x ms have passed.
+         * infinite
+Search until the stop command is given. Stockfish won't exit the search without being told so in this mode!
+         * perft <x>
+A debugging function to walk the move generation tree of strictly legal moves to count all the leaf nodes of a certain depth.
+The bench command can be used to measure the speed of perft.
+stop
+Stop calculating as soon as possible
+Example
+ponderhit
+The user has played the expected move.
+This will be sent if the engine was told to ponder on the same move the user has played.
+The engine will continue searching but switch from pondering to normal search.
+Example
+> setoption name Ponder value true
+> position startpos moves e2e4
+> go movetime 1000
+info string NNUE evaluation using nn-52471d67216a.nnue enabled
+info depth 1 seldepth 1 multipv 1 score cp -13 nodes 22 nps 22000 hashfull 0 tbhits 0 time 1 pv e7e5
+info depth 2 seldepth 2 multipv 1 score cp -11 nodes 71 nps 71000 hashfull 0 tbhits 0 time 1 pv e7e6
+info depth 3 seldepth 2 multipv 1 score cp -11 nodes 189 nps 94500 hashfull 0 tbhits 0 time 2 pv e7e6
+info depth 4 seldepth 2 multipv 1 score cp -11 nodes 248 nps 124000 hashfull 0 tbhits 0 time 2 pv e7e6
+info depth 5 seldepth 5 multipv 1 score cp -37 nodes 1383 nps 345750 hashfull 1 tbhits 0 time 4 pv d7d5 e4d5 d8d5
+info depth 6 seldepth 5 multipv 1 score cp -30 nodes 2545 nps 318125 hashfull 1 tbhits 0 time 8 pv c7c5 g1f3 e7e6
+info depth 7 seldepth 7 multipv 1 score cp -30 nodes 4201 nps 350083 hashfull 2 tbhits 0 time 12 pv c7c5 g1f3 e7e6 d2d4 c5d4 f3d4
+info depth 8 seldepth 10 multipv 1 score cp -43 nodes 10574 nps 377642 hashfull 4 tbhits 0 time 28 pv c7c5 g1f3 e7e6 d2d4 c5d4 f1e2
+info depth 9 seldepth 11 multipv 1 score cp -35 nodes 16924 nps 360085 hashfull 6 tbhits 0 time 47 pv e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6
+info depth 10 seldepth 13 multipv 1 score cp -41 nodes 34866 nps 325850 hashfull 12 tbhits 0 time 107 pv e7e5 g1f3 b8c6 f1b5 g8f6 b1c3 f8c5 e1g1 d7d6 d2d4 e5d4 f3d4
+info depth 11 seldepth 14 multipv 1 score cp -38 nodes 43562 nps 325089 hashfull 15 tbhits 0 time 134 pv e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 d5e4 c3e4
+info depth 12 seldepth 16 multipv 1 score cp -41 nodes 56507 nps 326630 hashfull 23 tbhits 0 time 173 pv e7e6 d2d4 d7d5 b1c3 f8b4 g1e2 d5e4 a2a3 b4c3 e2c3
+info depth 13 seldepth 15 multipv 1 score cp -32 nodes 73728 nps 323368 hashfull 28 tbhits 0 time 228 pv e7e6 d2d4 d7d5 b1c3 g8f6 e4e5 f6d7 f2f4 c7c5 c3e2 c5d4 e2d4
+info depth 14 seldepth 17 multipv 1 score cp -31 nodes 90766 nps 318477 hashfull 37 tbhits 0 time 285 pv e7e6 d2d4 d7d5 b1c3 g8f6 e4e5 f6d7 f2f4 c7c5 c3e2 b8c6 g1f3 f8e7 c2c3 e8g8
+info depth 15 seldepth 17 multipv 1 score cp -35 nodes 193951 nps 317432 hashfull 76 tbhits 0 time 611 pv e7e5 g1f3 b8c6 f1c4 g8f6 d2d3 f8e7 b1c3 d7d6 h2h3 e8g8
+info depth 16 seldepth 17 multipv 1 score cp -23 nodes 255750 nps 322916 hashfull 98 tbhits 0 time 792 pv e7e5 g1f3 b8c6 f1c4 g8f6 b1c3 f8c5 d2d3 h7h6 c1e3 c5e3 f2e3 d7d6 c4b3
+info depth 17 seldepth 20 multipv 1 score cp -27 upperbound nodes 323628 nps 322338 hashfull 132 tbhits 0 time 1004 pv e7e5 g1f3
+bestmove e7e5 ponder g1f3
+Stockfish plays 1. ... e5 and expects 2. Nf3
+> position startpos moves e2e4 e7e5 g1f3
+> go ponder movetime 1000
+info string NNUE evaluation using nn-52471d67216a.nnue enabled
+info depth 1 seldepth 1 multipv 1 score cp -30 nodes 47 nps 23500 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4
+info depth 2 seldepth 2 multipv 1 score cp -30 nodes 86 nps 43000 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4
+info depth 3 seldepth 4 multipv 1 score cp -30 nodes 144 nps 72000 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4 e5d4 e4e5
+info depth 4 seldepth 5 multipv 1 score cp -30 nodes 189 nps 94500 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4 e5d4 e4e5 f6e4
+info depth 5 seldepth 6 multipv 1 score cp -29 nodes 252 nps 126000 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4
+info depth 6 seldepth 7 multipv 1 score cp -29 nodes 355 nps 177500 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6
+info depth 7 seldepth 8 multipv 1 score cp -29 nodes 591 nps 295500 hashfull 0 tbhits 0 time 2 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6
+info depth 8 seldepth 11 multipv 1 score cp -29 nodes 1676 nps 279333 hashfull 0 tbhits 0 time 6 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6
+info depth 9 seldepth 10 multipv 1 score cp -29 nodes 2414 nps 301750 hashfull 0 tbhits 0 time 8 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6 e4d6
+info depth 10 seldepth 12 multipv 1 score cp -26 nodes 5045 nps 296764 hashfull 1 tbhits 0 time 17 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6 e4d6 c1g5 b8c6
+info depth 11 seldepth 12 multipv 1 score cp -26 nodes 8612 nps 277806 hashfull 2 tbhits 0 time 31 pv g8f6 d2d4 e5d4 e4e5 f6e4 d1d4 d7d5 e5d6 e4d6 d4c3 d8e7 f1e2
+info depth 12 seldepth 17 multipv 1 score cp -34 nodes 18839 nps 303854 hashfull 6 tbhits 0 time 62 pv g8f6 d2d4 f6e4 f1d3 d7d5 f3e5 f8d6 b1d2 e4d2 c1d2 b8c6 d1h5 g7g6 e5c6 b7c6 h5e2 d8e7
+info depth 13 seldepth 19 multipv 1 score cp -36 nodes 59966 nps 310704 hashfull 25 tbhits 0 time 193 pv b8c6 f1c4 g8f6 d2d3 f8e7 e1g1 e8g8 f1e1 d7d6 a2a4 c8e6
+info depth 14 seldepth 19 multipv 1 score cp -28 nodes 128004 nps 312968 hashfull 61 tbhits 0 time 409 pv g8f6 d2d4 f6e4 f1d3 d7d5 f3e5 f8d6 c2c4 e8g8 c4d5 d6b4 b1d2 e4d2 c1d2
+info depth 15 seldepth 22 multipv 1 score cp -31 nodes 191379 nps 314251 hashfull 92 tbhits 0 time 609 pv b8c6 f1c4 g8f6 d2d3 f8e7 e1g1 d7d6 a2a4 e8g8 f1e1 c6a5 c4a2 c7c5 b1c3 a5c6 a2c4 c8e6 c3d5 e6d5 e4d5
+info depth 16 seldepth 24 multipv 1 score cp -32 nodes 319240 nps 316392 hashfull 150 tbhits 0 time 1009 pv b8c6 f1c4 g8f6 d2d3 f8e7 e1g1 d7d6 a2a4 e8g8 a4a5 c8e6 c4e6 f7e6 a5a6 b7b5 c2c3 d8c8 b1d2 a8b8 b2b4
+The opponent plays the expected 2. Nf3
+> ponderhit
+info depth 17 seldepth 24 multipv 1 score cp -32 nodes 351706 nps 307973 hashfull 161 tbhits 0 time 1142 pv b8c6 f1c4 g8f6 d2d3 f8e7 e1g1 d7d6 a2a4 e8g8 a4a5 c8e6 c4e6 f7e6 a5a6 b7b5 c2c3 d8c8 b1d2 a8b8 b2b4
+bestmove b8c6 ponder f1c4
+Stockfish plays 2. ... Nc6 and expects 3. Bc4
+> position startpos moves e2e4 e7e5 g1f3 b8c6 f1c4
+> go ponder movetime 1000
+info string NNUE evaluation using nn-52471d67216a.nnue enabled
+info depth 1 seldepth 1 multipv 1 score cp -34 nodes 39 nps 39000 hashfull 0 tbhits 0 time 1 pv d7d6
+info depth 2 seldepth 2 multipv 1 score cp -38 nodes 95 nps 47500 hashfull 0 tbhits 0 time 2 pv d7d6 d2d4 e5d4
+info depth 3 seldepth 3 multipv 1 score cp -38 nodes 164 nps 82000 hashfull 0 tbhits 0 time 2 pv d7d6 d2d4 e5d4
+info depth 4 seldepth 4 multipv 1 score cp -38 nodes 231 nps 115500 hashfull 0 tbhits 0 time 2 pv d7d6 d2d4 e5d4 f3d4
+...
+________________
+
+
+Non-standard commands
+bench
+NOTE
+            * String parameters are case-sensitive. In case of invalid values of string parameters, the error is not given, and the behavior is undefined (the program does not fall back to a default value).
+            * The [file path] may contain one or more positions, each on a separate line.
+This runs a standard search benchmark on a pre-selected assortment of positions. It prints the total combined nodes searched, as well as time taken.
+This command serves two primary purposes:
+            * The total number of nodes searched with default parameters can be used as a "signature" or "fingerprint" of the exact search algorithm version in the binary being used. The main utility of the nodecount signature is to ensure that, when testing possible new patches on Fishtest, the author and workers are working on the exact same code. It also can be used to verify which version or release you have locally although the commit hash is a more direct way to do this.
+            * It can be used as a basic nodes-per-second speed benchmark, although we recommend using the speedtest command instead.
+Usage: bench [ttSize] [threads] [limit] [fenFile] [limitType]
+The standardized nodecount signature of a version is obtained using all default parameters. Each functional commit in the Stockfish commit history includes a standardized nodecount signature. For example, the nodecount signature of Stockfish 15 is 8129754.
+Parameter
+	Default
+	Values
+	Meaning
+	ttSize
+	16
+	
+
+	Hash value
+	threads
+	1
+	
+
+	Number of threads
+	limit
+	13
+	
+
+	The limit of limitType
+	fenFile
+	default
+	default, current or [file path]
+	The positions used for the bench
+	limitType
+	depth
+	A go parameter (e.g. depth or nodes) or eval
+	The type of limit
+	Basic example of usage
+The bench command may also be used in the command line when executing Stockfish.
+./stockfish bench
+Running the bench with specific parameters and redirecting the output of the benchmark to a file called "outputFile".
+./stockfish bench 16 1 1 inputFile > outputFile
+Running the benchmark with specific parameters in the starting position indefinitely and redirecting the output. Note than in this case, the limit is ignored.
+./stockfish bench 4096 16 _ current infinite > outputFile
+You can use the bench command to measure the speed of perft
+speedtest
+NOTE
+In official releases this command is only available since Stockfish 17.1.
+Measures the speed of the computer with a realistic and stable hardware benchmark. By default, Stockfish will run on all available threads, using a reasonable hash, on a number of positions that represent at typical game. The output is the achieved Nodes/second.
+The simplest and intended usage is: ./stockfish speedtest
+Usage: speedtest [threads] [hash (MiB)] [runtime (s)]
+Example with output
+Parameter
+	Default
+	threads
+	all
+	hash
+	threads * 128
+	runtime
+	150
+	d
+Display the current position, with ASCII art and FEN.
+Example
+eval
+NOTE
+The eval command only provides a very rough evaluation of the position without any search involved and is not recommended for most use cases.
+In order to get an accurate evaluation of the current position, you need to use the go command.
+Display the static evaluation of the current position.
+Example
+compiler
+Give information about the compiler and environment used for building a binary.
+Example:
+> compiler
+
+
+Compiled by g++ (GNUC) 13.1.0 on MinGW64
+Compilation settings include:  64bit AVX2 SSE41 SSSE3 SSE2 POPCNT
+__VERSION__ macro expands to: 13.1.0
+export_net [filenameBigNet] [filenameSmallNet]
+Exports the currently loaded network to a file. If the currently loaded network is the embedded network and the filename is not specified then the network is saved to the file matching the name of the embedded network, as defined in evaluate.h. If the currently loaded network is not the embedded network (some net set through the UCI setoption) then the filename parameter is required and the network is saved into that file.
+flip
+Flips the side to move.
+help
+Gives version info, describes Stockfish as a chess engine using UCI, and points to the GitHub page for more details.
+license
+Gives version info, describes Stockfish as a chess engine using UCI, and points to the GitHub page for more details.
+Last updated: Nov 23, 2025, 7:18:33 AM
